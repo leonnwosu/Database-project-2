@@ -1,5 +1,5 @@
-CREATE Database LMS;
-USE LMS;
+
+USE Library_MS;
 
 CREATE TABLE Book (
 	book_id INT PRIMARY KEY,
