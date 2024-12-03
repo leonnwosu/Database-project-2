@@ -6,7 +6,7 @@ root = Tk()
 root.title('Library Management System')
 root.geometry("800x700")
 
-# Connect to the DB and create a table
+
 conn = mysql.connector.connect(
     host='localhost',
     user='root',
@@ -16,6 +16,7 @@ conn = mysql.connector.connect(
 
 cursor  = conn.cursor()
 
+#--1
 # Function to check out a book
 def checkout_book():
     # Get values from entry fields
@@ -24,7 +25,7 @@ def checkout_book():
     branchId = entry_branchId.get()
     
     cursor.execute("""
-        INSERT INTO book_loans (bookId, branchId, cardNo, dateOut, dueDate)
+        INSERT INTO book_loans (book_id, branch_id, card_no, date_out, due_date)
         VALUES (%s, %s, %s, NOW(), DATE_ADD(NOW(), INTERVAL 14 DAY))
     """, (bookId, branchId, cardNo))
     conn.commit()
@@ -32,7 +33,7 @@ def checkout_book():
     print("Checked out book successfully")
     
     cursor.execute("""
-        SELECT * FROM book_copies WHERE bookId = %s
+        SELECT * FROM book_copies WHERE book_id = %s
     """, (bookId,))
     book_copies = cursor.fetchone()
     print("Updated book copies:", book_copies)
@@ -40,7 +41,7 @@ def checkout_book():
     # Show success message in the GUI
     result_label.config(text="Book checked out successfully!", fg="green")
 
-
+#2
 # Function to add a new borrower
 def new_borrower():
     # Get values from entry fields
@@ -66,6 +67,7 @@ def new_borrower():
     # Show the new card number in the GUI
     result_label.config(text=f"New Borrower added! Card No: {card_no}", fg="blue")
 
+#3
 def Add_book():
     title = entry_bookTitle.get()
     author = entry_bookAuthor.get()
@@ -115,6 +117,7 @@ def Add_book():
         while cursor.nextset():
             pass
 
+#4
 def book_loans_per_branch():
     
     title = entry_bookTitle.get()
@@ -140,7 +143,7 @@ def book_loans_per_branch():
 
     print("query successful")
 
-    
+#5   
 def get_late_book_loans():
     start_date = entry_Start_date.get()  # User inputs start date (format: YYYY-MM-DD)
     end_date = entry_end_date.get()      # User inputs end date (format: YYYY-MM-DD)
@@ -178,10 +181,87 @@ def get_late_book_loans():
 
     print("Query executed successfully.")
 
+#6a
+def show_late_fee():
+    name = entry_name.get()
+    card_no= entry_cardNo.get()
+
+    # coalesce to make null = 0.00
+    cursor.execute("""SELECT 
+                Card_no AS Borrower_ID,
+                Borrower_Name AS Borrower_Name,
+                FORMAT(COALESCE(LateFeeBalance, 0), 2) AS LateFeeBalance
+            FROM vBookLoanInfo
+            WHERE 
+                (%s IS NULL OR card_no = %s)
+                AND (%s IS NULL OR Borrower_Name LIKE CONCAT('%%', %s, '%%'))
+            ORDER BY LateFeeBalance DESC;""", (card_no if card_no else None, card_no if card_no else None,
+              name if name else None, name if name else None))
+    
+    output = cursor.fetchall()
+
+    if output:
+        text = "borrower Info with late fee\n"
+        for row in output:
+            text += f"ID: {row[0]}, Name: {row[1]}, Late Fee: ${row[2]}\n"
+            result_label.config(text = text, fg = "blue")
+    else:
+        result_label.config(text="no records found.", fg = "red")
+
+    print(" late fee querry successfull")
+
+#6b
+def search_book_info():
+    card_no = entry_cardNo.get()
+    title = entry_bookTitle.get()
+    branch_id =entry_branchId.get()
+
+    cursor.execute("""SELECT 
+                Card_No AS Borrower_ID,
+                Book_Title AS Book_Title,
+                Branch_ID AS Branch_ID,
+                DATE_FORMAT(Date_Out, '%Y-%m-%d') AS Date_Out,
+                DATE_FORMAT(Due_Date, '%Y-%m-%d') AS Due_Date,
+                DATE_FORMAT(Returned_date, '%Y-%m-%d') AS Returned_Date,
+                FORMAT(LateFeeBalance, 2) AS Late_Fee_Amount,
+                CASE 
+                    WHEN LateFeeBalance IS NULL OR LateFeeBalance = 0 THEN 'Non-Applicable'
+                    ELSE CONCAT('$', FORMAT(LateFeeBalance, 2))
+                END AS Late_Fee_Display
+            FROM vBookLoanInfo
+            WHERE 
+                Card_No = %s AND 
+                (%s IS NULL OR Book_Title LIKE CONCAT('%%', %s, '%%')) AND
+                (%s IS NULL OR Branch_ID = %s)
+            ORDER BY LateFeeBalance DESC;""", 
+            (card_no, 
+            title if title else None, 
+            title if title else None, 
+            branch_id if branch_id else None, 
+            branch_id if branch_id else None))
+    
+    Output = cursor.fetchall()
+
+    if Output:
+        text = "book info with late fee :\n"
+        for row in Output:
+            text += (f"Borrower ID: {row[0]}, Book Title: {row[1]}, Branch: {row[2]}, "
+                    f"Date Out: {row[3]}, Due Date: {row[4]}, Returned Date: {row[5]}, "
+                    f"Late Fee: {row[7]}\n")
+        
+        result_label.config(text = text, fg = "blue")
+    
+    else:
+        result_label.config(text = "no records", fg = "red")
+    
+    print("book info querry successfull")
+
+
+
+
+
+
    
-
-
-
 
 
 
@@ -239,6 +319,8 @@ Button(root, text="Checkout Book", command=checkout_book).grid(row=12, column=0,
 Button(root, text="Add New Book", command=Add_book).grid(row=13, column=0, columnspan=2, pady=10, padx=10, ipadx=100)
 Button(root, text="list book per branch", command=book_loans_per_branch).grid(row=14, column=0, columnspan=2, pady=10, padx=10, ipadx=100)
 Button(root, text="late returns", command=get_late_book_loans).grid(row=15, column=0, columnspan=2, pady=10, padx=10, ipadx=100)
+Button(root, text="list borrowers Late fee", command=show_late_fee).grid(row=16, column=0, columnspan=2, pady=10, padx=10, ipadx=100)
+Button(root, text="show book Info", command=search_book_info).grid(row=17, column=0, columnspan=2, pady=10, padx=10, ipadx=100)
 
 
 

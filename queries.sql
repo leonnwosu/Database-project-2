@@ -139,7 +139,7 @@ SET LateFee = CASE
         WHEN branch_name = 'West Branch' THEN 5
         WHEN branch_name = 'East Branch' THEN 5
         Else 2
-        END;
+    END;
 
 --3
 
