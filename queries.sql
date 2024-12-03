@@ -131,7 +131,7 @@ SET late = CASE
 --2
 
 ALTER TABLE library_branch
-ADD LateFee INT
+ADD LateFee INT;
 
 UPDATE library_branch
 SET LateFee = CASE
