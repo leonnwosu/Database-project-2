@@ -1,21 +1,21 @@
---1
+
 ALTER TABLE borrower ADD CONSTRAINT card_no UNIQUE (card_no);
 
 INSERT INTO borrower (card_no, name, address, phone)
 VALUES (NULL, 'Leon Nwosu', '5212 la viva ln', '682-804-3811');
 
---2
+
 UPDATE borrower
 SET phone = '832-721-8965'
 WHERE name = 'Leon Nwosu';
 
---3
+
 UPDATE book_copies 
 JOIN library_branch AS LB ON book_copies.branch_id = LB.branch_id
 SET book_copies.no_of_copies = book_copies.no_of_copies + 1
 WHERE LB.branch_name = 'East Branch';
 
---4a
+
 ALTER TABLE book_authors DROP FOREIGN KEY `book_authors_ibfk_1`;
 ALTER TABLE book_copies DROP FOREIGN KEY `book_copies_ibfk_1`;
 ALTER TABLE book_loans DROP FOREIGN KEY `book_loans_ibfk_1`;
@@ -30,7 +30,7 @@ SELECT book_id, 'J.K. Rowling'
 FROM Book
 WHERE title = 'Harry Potter and the Sorcerer''s Stone';
 
---4b
+
 ALTER TABLE book_copies DROP FOREIGN KEY `book_copies_ibfk_2`;
 ALTER TABLE library_branch DROP PRIMARY KEY;
 ALTER TABLE library_branch MODIFY branch_id INT AUTO_INCREMENT PRIMARY KEY;
@@ -40,7 +40,7 @@ VALUES
 ( 'North Branch', '456 NW, Irving TX 76100'),
 ( 'UTA Branch', '123 Cooper St, Arlington TX 76101');
 
---5
+
 SELECT 
     b.title AS Book_Title, 
     lb.branch_name AS Branch_Name, 
@@ -54,13 +54,13 @@ JOIN
 WHERE 
     bl.date_out BETWEEN '2022-03-05' AND '2022-03-23';
 
---6
+
 SELECT BR.name
 FROM borrower AS BR
 JOIN book_loans AS B ON B.card_no = BR.card_no
 WHERE B.returned_date IS NULL;
 
---7
+
 SELECT 
     LB.branch_name, 
     COUNT(BL.book_id) AS borrowed_books_amount, 
@@ -75,7 +75,7 @@ JOIN
     library_branch AS LB ON LB.branch_id = BL.branch_id
 GROUP BY 
     LB.branch_name, book_status;
---8
+
 SELECT 
     B.title, 
     MAX(DATEDIFF(BL.due_date, BL.date_out)) AS max_days_borrowed
@@ -85,7 +85,7 @@ JOIN
     book_loans AS BL ON B.book_id = BL.book_id
 GROUP BY 
     B.title;
---9
+
 SELECT 
     B.title, 
     BA.author_name,
@@ -107,7 +107,7 @@ WHERE
     BR.name = 'Ethan Martinez'
 ORDER BY 
     BL.date_out;
---10
+
 SELECT BR.name, BR.address
 FROM borrower AS BR
 JOIN book_loans AS B ON B.card_no = BR.card_no
@@ -168,6 +168,19 @@ FROM book_loans AS bl
 JOIN book AS b ON b.book_id = bl.book_id
 JOIN  borrower AS br ON br.card_no = bl.card_no
 JOIN  library_branch AS lb ON lb.branch_id = bl.branch_id;
+
+
+
+CREATE TRIGGER after_book_loan_insert
+AFTER INSERT ON book_loans
+FOR EACH ROW
+BEGIN
+    UPDATE Book_Copies
+    SET no_of_copies = no_of_copies - 1
+    WHERE book_id = NEW.book_id;
+END;
+
+
 
 
 
