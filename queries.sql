@@ -124,8 +124,10 @@ ADD late Boolean;
 
 UPDATE book_loans
 SET late = CASE 
-    WHEN CURRENT_DATE > due_date THEN 1
-    WHEN CURRENT_DATE <= due_date THEN 0
+    WHEN Returned_date > due_date THEN 1
+    WHEN Returned_date <= due_date THEN 0
+    WHEN Returned_date = NULL AND CURRENT_DATE > due_date THEN 1
+    ELSE 0
     END;
 
 --2
