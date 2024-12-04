@@ -326,7 +326,7 @@ Button(root, text="show book Info", command=search_book_info).grid(row=17, colum
 
 # Label to display result message
 result_label = Label(root, text="", font=("Arial", 12))
-result_label.grid(row=12, column=0, columnspan=2, pady=10)
+result_label.grid(row=18, column=0, columnspan=2, pady=10)
 
 # Start the main loop for the GUI
 root.mainloop()
