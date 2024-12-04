@@ -8,7 +8,7 @@ This project is a library management system designed to manage borrowers, books,
 
 To run this project, ensure the following software and tools are installed:
 
-# Pyhton Installation
+# Python Installation
 
 * Download Python (version 3.9 or later) from the official Python website. https://www.python.org/downloads/
 
